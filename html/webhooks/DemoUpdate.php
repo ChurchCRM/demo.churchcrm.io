@@ -17,7 +17,7 @@ function playbackSQLtoDatabase($fileName, $mysqli) {
   }
 }
 
-function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword, $installFile, $version=null) {
+function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword,$delPath, $version=null) {
   echo "deleting all tables\r\n";
   $mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName);
   $mysqli->query('SET foreign_key_checks = 0');
@@ -29,7 +29,9 @@ function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword, $installFile,
 
   $mysqli->query('SET foreign_key_checks = 1');
   echo "installing from new schema\r\n";
-  playbackSQLtoDatabase($installFile, $mysqli);
+  playbackSQLtoDatabase($delPath."/mysql/install/Install.sql", $mysqli);
+  playbackSQLtoDatabase($delPath."/mysql/upgrade/update_config.sql", $mysqli);
+  playbackSQLtoDatabase($delPath."/mysql/upgrade/rebuild_nav_menus.sql", $mysqli);
   if($mysqli->query('UPDATE user_usr SET usr_Password = "ddf23c1d9fc212aed27ea02623b51bc3a83a703a3b70a669dc81e353f3cdab22", usr_NeedPasswordChange = 0 where usr_UserName = "Admin" '))
   {
     echo "Set AdminPassword.\r\n";
@@ -92,7 +94,7 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
     $version = $srcComposer->version;
     
     copy(dirname(__FILE__) . "/configFiles/" . $branchName . "/Include/Config.php", $delPath."/Include/Config.php"); //copy any config files necessary
-    resetDatabase('localhost', "gdawoud_church_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath."/mysql/install/Install.sql", $version);
+    resetDatabase('localhost', "gdawoud_church_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath, $version);
 
     
     } else {
