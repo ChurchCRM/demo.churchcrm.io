@@ -32,7 +32,7 @@ function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword,$delPath, $ver
   playbackSQLtoDatabase($delPath."/mysql/install/Install.sql", $mysqli);
   playbackSQLtoDatabase($delPath."/mysql/upgrade/update_config.sql", $mysqli);
   playbackSQLtoDatabase($delPath."/mysql/upgrade/rebuild_nav_menus.sql", $mysqli);
-  if($mysqli->query('UPDATE user_usr SET usr_Password = "ddf23c1d9fc212aed27ea02623b51bc3a83a703a3b70a669dc81e353f3cdab22", usr_NeedPasswordChange = 0 where usr_UserName = "Admin" '))
+  if($mysqli->query('UPDATE user_usr SET usr_NeedPasswordChange = 0 where usr_UserName = "Admin" '))
   {
     echo "Set AdminPassword.\r\n";
   }
@@ -40,7 +40,7 @@ function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword,$delPath, $ver
   if ($version)
   {
     echo "setting version to ". $version."\r\n";
-    $qs = "INSERT INTO version_ver (ver_version, ver_update_start) VALUES ('" . $version . "', now());";
+    $qs = "INSERT INTO version_ver (ver_version, ver_update_start,ver_update_end) VALUES ('" . $version . "', now(), now());";
     if($mysqli->query($qs))
     {
       echo "Updated Version Table\r\n";
@@ -94,7 +94,7 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
     $version = $srcComposer->version;
     
     copy(dirname(__FILE__) . "/configFiles/" . $branchName . "/Include/Config.php", $delPath."/Include/Config.php"); //copy any config files necessary
-    resetDatabase('localhost', "gdawoud_church_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath, $version);
+    resetDatabase('localhost', "krystoco_demo_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath,$version);
 
     
     } else {
