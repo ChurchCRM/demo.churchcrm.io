@@ -68,12 +68,12 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
 {
 
   $target_dir = dirname(dirname(__FILE__))."/temp/";
-  $target_file = $target_dir . basename($_FILES["fileupload"]["name"]);
+  $commitHash =  $_POST['commitHash'];
+  $target_file = $target_dir . basename($_FILES["fileupload"]["name"],".zip") . substr($commitHash,0,7).".zip";
   
   if (move_uploaded_file($_FILES["fileupload"]["tmp_name"], $target_file)) 
   {
     $branchName =  $_POST['branch'];
-    $commitHash =  $_POST['commitHash'];
     
     echo "The file ". basename( $_FILES["fileupload"]["name"]). " has been uploaded.\r\n";
     echo "Commit Hash: " . $commitHash;
