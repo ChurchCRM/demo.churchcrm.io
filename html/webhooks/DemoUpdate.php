@@ -69,10 +69,11 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
 
   $target_dir = dirname(dirname(__FILE__))."/temp/";
   $commitHash =  $_POST['commitHash'];
-  $target_file = $target_dir . basename($_FILES["fileupload"]["name"],".zip") . substr($commitHash,0,7).".zip";
+  $target_file = $target_dir . basename($_FILES["fileupload"]["name"],".zip") . "-" . substr($commitHash,0,7).".zip";
   
   if (move_uploaded_file($_FILES["fileupload"]["tmp_name"], $target_file)) 
   {
+    
     $branchName =  $_POST['branch'];
     
     echo "The file ". basename( $_FILES["fileupload"]["name"]). " has been uploaded.\r\n";
@@ -92,6 +93,10 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
     $srcComposer -> commitHash = $commitHash;
     file_put_contents($delPath."/composer.json",json_encode($srcComposer));
     $version = $srcComposer->version;
+    
+    $archiveList = json_decode(file_get_contents(dirname(__FILE__)."/builds.json"));
+    array_push($archiveList->$branchName, array($commitHash => basename($target_file)));
+    file_put_contents(dirname(__FILE__)."/builds.json",json_encode($archiveList));
     
     copy(dirname(__FILE__) . "/configFiles/" . $branchName . "/Include/Config.php", $delPath."/Include/Config.php"); //copy any config files necessary
     resetDatabase('localhost', "krystoco_demo_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath,$version);

@@ -5,6 +5,8 @@ $masterJson = json_decode($composerFile, true);
 $composerFile = file_get_contents(dirname(__FILE__)."/develop/composer.json");
 $developJson = json_decode($composerFile, true);
 
+$builds = json_decode(file_get_contents(dirname(__FILE__)."/webhooks/builds.json"));
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,6 +44,23 @@ $developJson = json_decode($composerFile, true);
                             <a href="https://github.com/ChurchCRM/CRM/tree/master"
                                class="btn btn-success" role="button"><i class="fa fa-github fa-fw"></i> View On github</a>
                         </p>
+                        <br/>
+                        <?php
+                          if ( count($builds->master) > 0 )
+                          {
+                            ?>
+                            <h4>Recent Build Archives</h4>
+                            <ul>
+                              <?php
+                                foreach ($builds->master as $commitHash=>$fileName)
+                                {
+                                  echo "<li>".$fileName."</li>";
+                                }
+                              ?>
+                            </ul>
+                            <?php
+                          }
+                          ?>
                     </div>
                 </div>
             </div>
