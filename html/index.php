@@ -5,7 +5,20 @@ $masterJson = json_decode($composerFile, true);
 $composerFile = file_get_contents(dirname(__FILE__)."/develop/composer.json");
 $developJson = json_decode($composerFile, true);
 
-$builds = json_decode(file_get_contents(dirname(__FILE__)."/webhooks/builds.json"));
+function scan_dir($dir) {
+    $ignored = array('.', '..', '.svn', '.htaccess');
+
+    $files = array();    
+    foreach (scandir($dir) as $file) {
+        if (in_array($file, $ignored)) continue;
+        $files[$file] = filemtime($dir . '/' . $file);
+    }
+
+    arsort($files);
+    $files = array_keys($files);
+
+    return ($files) ? $files : false;
+}
 
 ?>
 <!DOCTYPE html>
@@ -33,11 +46,11 @@ $builds = json_decode(file_get_contents(dirname(__FILE__)."/webhooks/builds.json
         <div class="row">
             <div class="col-md-6">
                 <div class="thumbnail">
-                    <img src="https://camo.githubusercontent.com/9ade378b5c27173686685bb380f78301ab94bc1c/687474703a2f2f7777772e63687572636863726d2e696f2f73637265656e73686f74732f6d656e752e504e47">
+                    <img src="screenshot.png">
 
                     <div class="caption">
                         <h3>Master <?= $masterJson['version'] ?> Build</h3>
-			<p><a href="https://github.com/ChurchCRM/CRM/commit/<?= $masterJson['commitHash'] ?>">(<?= $masterJson['commitHash'] ?>)</a></p>                        <p>user: admin | password: george</p>
+			<p>View on GitHub: <a href="https://github.com/ChurchCRM/CRM/commit/<?= $masterJson['commitHash'] ?>">(<?= $masterJson['commitHash'] ?>)</a></p>                        <p>user: admin | password: changeme</p>
                         <p>
                             <a href="/master"
                                class="btn btn-primary" role="button"><i class="fa fa-car fa-fw"></i> Test Drive a Preview</a>
@@ -46,39 +59,64 @@ $builds = json_decode(file_get_contents(dirname(__FILE__)."/webhooks/builds.json
                         </p>
                         <br/>
                         <?php
-                          if ( count($builds->master) > 0 )
+                          $builds = scan_dir(__DIR__."/builds/master");
+                          $dir="master";
+                          if ( count($builds) > 0 )
                           {
                             ?>
                             <h4>Recent Build Archives</h4>
                             <ul>
                               <?php
-                                foreach ($builds->master as $commitHash=>$fileName)
+                                $i=0;
+                                foreach ($builds as $build)
                                 {
-                                  echo "<li>".$fileName."</li>";
+                                  echo "<li><a href=\"builds/".$dir."/".$build."\">".$build."</a>".($i==0 ?" - Current":"")."</li>";
+                                  $i++;
                                 }
                               ?>
                             </ul>
                             <?php
                           }
-                          ?>
+                        ?>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="thumbnail">
-                    <img src="https://camo.githubusercontent.com/9ade378b5c27173686685bb380f78301ab94bc1c/687474703a2f2f7777772e63687572636863726d2e696f2f73637265656e73686f74732f6d656e752e504e47">
+                    <img src="screenshot.png">
 
                     <div class="caption">
                         <h3>Development <?= $developJson['version'] ?> - Beta</h3>
-			<p><a href="https://github.com/ChurchCRM/CRM/commit/<?= $developJson['commitHash'] ?>">(<?= $developJson['commitHash'] ?>)</a></p>
-                        <p>user: admin | password: george</p>
+			<p>View on GitHub:  <a href="https://github.com/ChurchCRM/CRM/commit/<?= $developJson['commitHash'] ?>">(<?= $developJson['commitHash'] ?>)</a></p>
+                        <p>user: admin | password: changeme</p>
                         <p>
                             <a href="/develop"
                                class="btn btn-primary" role="button"><i class="fa fa-car fa-fw"></i> Test Drive a Preview</a>
                             <a href="https://github.com/ChurchCRM/CRM/tree/develop"
                                class="btn btn-success" role="button"><i class="fa fa-github fa-fw"></i> View On github</a>
                         </p>
+                        <br/>
+                        <?php
+                          $builds = scan_dir(__DIR__."/builds/develop");
+                          $dir="develop";
+                          if ( count($builds) > 0 )
+                          {
+                            ?>
+                            <h4>Recent Build Archives</h4>
+                            <ul>
+                              <?php
+                              $i=0;
+                                foreach ($builds as $build)
+                                {
+                                   echo "<li><a href=\"builds/".$dir."/".$build."\">".$build."</a>".($i==0 ?" - Current":"")."</li>";
+                                  $i++;
+                                }
+                              ?>
+                            </ul>
+                            <?php
+                          }
+                        ?>
                     </div>
                 </div>
             </div>
@@ -98,6 +136,15 @@ $builds = json_decode(file_get_contents(dirname(__FILE__)."/webhooks/builds.json
 </script>
 <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
+  ga('create', 'UA-59805208-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
 </body>
 </html>

@@ -64,18 +64,45 @@ function delTree($dir) {
   return rmdir($dir);
 }
 
+function scan_dir($dir) {
+    $ignored = array('.', '..', '.svn', '.htaccess');
+
+    $files = array();    
+    foreach (scandir($dir) as $file) {
+        if (in_array($file, $ignored)) continue;
+        $files[$file] = filemtime($dir . '/' . $file);
+    }
+
+    arsort($files);
+    $files = array_keys($files);
+
+    return ($files) ? $files : false;
+}
+
+function cleanup_old_builds ($path) {
+  $files = scan_dir($path);
+  if (count($files) > 10 )
+  {
+    $remove = array_slice($files,10,count($files)-10);
+    foreach ($remove as $file)
+    {
+        unlink($path."/".$file);
+    }
+  }
+  
+  
+}
+
 if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
 {
 
-  $target_dir = dirname(dirname(__FILE__))."/temp/";
+  $branchName =  $_POST['branch'];
   $commitHash =  $_POST['commitHash'];
-  $target_file = $target_dir . basename($_FILES["fileupload"]["name"],".zip") . "-" . substr($commitHash,0,7).".zip";
+  $temp_dir = dirname(dirname(__FILE__))."/temp";
+  $buildFile = dirname(dirname(__FILE__))."/builds/" . $branchName."/". basename($_FILES["fileupload"]["name"],".zip") . "-" . substr($commitHash,0,7).".zip";
   
-  if (move_uploaded_file($_FILES["fileupload"]["tmp_name"], $target_file)) 
-  {
-    
-    $branchName =  $_POST['branch'];
-    
+  if (move_uploaded_file($_FILES["fileupload"]["tmp_name"], $buildFile))   {
+
     echo "The file ". basename( $_FILES["fileupload"]["name"]). " has been uploaded.\r\n";
     echo "Commit Hash: " . $commitHash;
     
@@ -84,19 +111,15 @@ if(isset($_POST['demoKey']) && $_POST['demoKey'] == $DEMOPUSHKEY )
     delTree($delPath);
 
     $p = new ZipArchive;
-    $p->open($target_file);
-    $p->extractTo($target_dir);  //extract the code\
+    $p->open($buildFile);
+    $p->extractTo($temp_dir);  //extract the code\
     $p->close();
-    rename($target_dir."/churchcrm",$delPath); // move the repository from the temp folder to the root
+    rename($temp_dir."/churchcrm",$delPath); // move the repository from the temp folder to the root
 
     $srcComposer = json_decode(file_get_contents($delPath."/composer.json"));
     $srcComposer -> commitHash = $commitHash;
     file_put_contents($delPath."/composer.json",json_encode($srcComposer));
     $version = $srcComposer->version;
-    
-    $archiveList = json_decode(file_get_contents(dirname(__FILE__)."/builds.json"));
-    array_push($archiveList->$branchName, array($commitHash => basename($target_file)));
-    file_put_contents(dirname(__FILE__)."/builds.json",json_encode($archiveList));
     
     copy(dirname(__FILE__) . "/configFiles/" . $branchName . "/Include/Config.php", $delPath."/Include/Config.php"); //copy any config files necessary
     resetDatabase('localhost', "krystoco_demo_crm_".$branchName, $DBUSERNAME, $DBPASSWORD, $delPath,$version);
@@ -112,5 +135,9 @@ else
   echo "Incorrect or missing build password";
 }
 
+$develop = dirname(dirname(__FILE__))."/builds/develop";
+$master = dirname(dirname(__FILE__))."/builds/master";
+cleanup_old_builds($develop);
+cleanup_old_builds($master);
 
 exit;
