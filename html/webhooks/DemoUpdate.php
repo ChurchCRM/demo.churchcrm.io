@@ -36,6 +36,10 @@ function resetDatabase($dbHost, $dbName, $dbUsername, $dbPassword,$delPath, $ver
   {
     echo "Set AdminPassword.\r\n";
   }
+  if($mysqli->query('UPDATE config_cfg SET cfg_value= "UA-59805208-2" where cfg_name = "googleTrackingID" '))
+  {
+    echo "Set Google Tracking ID.\r\n";
+  }
  
   if ($version)
   {
